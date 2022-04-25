@@ -9,6 +9,7 @@ import EditCategories from "./EditCategories";
 import Profile from "./Profile";
 import Login from "./Login";
 import Register from "./Register";
+// import AddContent from "./AddContent";
 
 export {
   Home,
@@ -22,4 +23,5 @@ export {
   Profile,
   Login,
   Register,
+  // AddContent,
 };

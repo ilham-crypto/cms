@@ -5,6 +5,10 @@ import { useHistory } from "react-router-dom";
 import { Card, Form, Col, Button, Row } from "react-bootstrap";
 import SideBar from "../SideBar.js";
 import NavBar from "../NavBar.js";
+import { EditorState, convertToRaw } from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
+import draftToHtml from "draftjs-to-html";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 const AddBlog = () => {
   window.addEventListener("DOMContentLoaded", (event) => {
@@ -19,7 +23,6 @@ const AddBlog = () => {
 
   const [title, setTitle] = useState("");
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
   const [token, setToken] = useState("");
   const [expire, setExpire] = useState("");
@@ -34,7 +37,7 @@ const AddBlog = () => {
     formData.append("image", image);
     formData.append("title", title);
     formData.append("name", name);
-    formData.append("description", description);
+    formData.append("description", userInfo.description.value);
 
     await axios.post("http://localhost:2020/api/post/", formData);
     history.push("/Posts");
@@ -91,6 +94,22 @@ const AddBlog = () => {
       }
     );
     setUsers(response.data);
+  };
+
+  const [userInfo, setuserInfo] = useState({
+    title: "",
+  });
+  const onChangeValue = (e) => {
+    setuserInfo({
+      ...userInfo,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  let editorState = EditorState.createEmpty();
+  const [description, setDescription] = useState(editorState);
+  const onEditorStateChange = (editorState) => {
+    setDescription(editorState);
   };
 
   return (
@@ -192,15 +211,30 @@ const AddBlog = () => {
                   Isi Konten
                 </Form.Label>
                 <Col sm="10">
-                  <Form.Control
+                  {/* <Form.Control
                     type="text"
                     as="textarea"
                     rows={3}
-                    name="nama"
+                    name="deskripsi"
                     placeholder="Isi konten..."
                     required
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                  /> */}
+                  <Editor
+                    editorState={description}
+                    toolbarClassName="toolbarClassName"
+                    wrapperClassName="wrapperClassName"
+                    editorClassName="editorClassName"
+                    onEditorStateChange={onEditorStateChange}
+                  />
+                  <textarea
+                    style={{ display: "none" }}
+                    disabled
+                    ref={(val) => (userInfo.description = val)}
+                    value={draftToHtml(
+                      convertToRaw(description.getCurrentContent())
+                    )}
                   />
                 </Col>
               </Form.Group>

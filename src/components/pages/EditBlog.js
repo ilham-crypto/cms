@@ -4,6 +4,10 @@ import axios from "axios";
 import { Card, Form, Col, Button, Row } from "react-bootstrap";
 import SideBar from "../SideBar.js";
 import NavBar from "../NavBar.js";
+import { EditorState, convertToRaw } from "draft-js";
+import { Editor } from "react-draft-wysiwyg";
+import draftToHtml from "draftjs-to-html";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 const AddBlog = () => {
   window.addEventListener("DOMContentLoaded", (event) => {
@@ -20,14 +24,13 @@ const AddBlog = () => {
   const history = useHistory();
   const [title, setTitle] = useState("");
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
 
   useEffect(() => {
     const getDataById = async () => {
       const { data } = await axios.get(`http://localhost:2020/api/post/${id}`);
       setTitle(data.title);
       setName(data.name);
-      setDescription(data.description);
+      setDescription(data.userInfo.description.value);
     };
 
     getDataById();
@@ -41,12 +44,28 @@ const AddBlog = () => {
     const data = {
       title: title,
       name: name,
-      description: description,
+      description: userInfo.description.value,
     };
 
     await axios.put(`http://localhost:2020/api/post/${id}`, data);
 
     history.push("/Posts");
+  };
+
+  const [userInfo, setuserInfo] = useState({
+    title: "",
+  });
+  const onChangeValue = (e) => {
+    setuserInfo({
+      ...userInfo,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  let editorState = EditorState.createEmpty();
+  const [description, setDescription] = useState(editorState);
+  const onEditorStateChange = (editorState) => {
+    setDescription(editorState);
   };
 
   return (
@@ -135,7 +154,7 @@ const AddBlog = () => {
                   Isi Konten
                 </Form.Label>
                 <Col sm="10">
-                  <Form.Control
+                  {/* <Form.Control
                     type="text"
                     as="textarea"
                     rows={3}
@@ -144,6 +163,21 @@ const AddBlog = () => {
                     required
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                  /> */}
+                  <Editor
+                    editorState={description}
+                    toolbarClassName="toolbarClassName"
+                    wrapperClassName="wrapperClassName"
+                    editorClassName="editorClassName"
+                    onEditorStateChange={onEditorStateChange}
+                  />
+                  <textarea
+                    style={{ display: "none" }}
+                    disabled
+                    ref={(val) => (userInfo.description = val)}
+                    value={draftToHtml(
+                      convertToRaw(description.getCurrentContent())
+                    )}
                   />
                 </Col>
               </Form.Group>
